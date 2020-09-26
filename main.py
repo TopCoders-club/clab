@@ -1,19 +1,15 @@
 import colabUtils
-import time
 
 #user code here
 class ExampleApp(colabUtils.colabApp):
     def __init__(self):
-        super().__init__()
+        # TODO
+        raise NotImplementedError
 
     def start(self):
-        while True:
-            time.sleep(2)
-            print("Running yooo")
+        # TODO
+        raise NotImplementedError
 
     def stop(self):
-        pass
-
-if __name__=='__main__':
-    app = ExampleApp()
-    app.run()
+        # TODO
+        raise NotImplementedError

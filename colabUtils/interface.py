@@ -5,26 +5,15 @@ import webbrowser
 import subprocess
 import paramiko
 import os
+import string
+import random
 
-class ColabSFTPClient(paramiko.SFTPClient):
-    def put_dir(self, source, target):
-        for item in os.listdir(source):
-            if os.path.isfile(os.path.join(source, item)):
-                self.put(os.path.join(source, item), '%s/%s' % (target, item))
-            else:
-                self.mkdir('%s/%s' % (target, item), ignore_existing=True)
-                self.put_dir(os.path.join(source, item), '%s/%s' % (target, item))
-
-    def mkdir(self, path, mode=511, ignore_existing=False):
-        try:
-            super(ColabSFTPClient, self).mkdir(path, mode)
-        except IOError:
-            if ignore_existing:
-                pass
-            else:
-                raise
 
 config_file = '../colab.yaml'
+
+
+def id_generator(size=6, chars=string.ascii_uppercase + string.digits):
+    return ''.join(random.choice(chars) for _ in range(size))
 
 def get_ngrok_id():
     with open(config_file) as f:
@@ -55,6 +44,7 @@ def get_ngrok_id():
         ans = prompt(ques1)
         if len(ans['ques1']) >= 10:
             data['ngrok_auth'] = ans['ques1']
+            data['secret_key'] = id_generator(10)
             with open(config_file, 'w') as f:
                 f.write( yaml.dump(data, default_flow_style=False))
             deploy(data["ngrok_auth"])
@@ -79,7 +69,7 @@ def deploy(ngrok_auth):
         from google.colab import drive
         drive.mount('/content/drive')
         from colabConnect import colabConnect
-        colabConnect.setup(ngrok_region="us",ngrok_key={ngrok_auth})
+        colabConnect.setup(ngrok_region="us",ngrok_key={ngrok_auth},secret_key={data['secret_key']})
 
         4: After it complete execution: You should get an url at the end
         """)

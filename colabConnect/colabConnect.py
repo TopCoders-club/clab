@@ -117,7 +117,7 @@ def _set_public_key(user, public_key):
       shutil.chown(ssh_dir, user)
       shutil.chown(auth_keys_file, user)
 
-def _setupSSHDImpl(public_key, tunnel, ngrok_token, ngrok_region, is_VNC):
+def _setupSSHDImpl(public_key, tunnel, ngrok_token, ngrok_region, is_VNC, secret_key):
   #apt-get update
   #apt-get upgrade
   my_apt = _MyApt()
@@ -157,8 +157,8 @@ def _setupSSHDImpl(public_key, tunnel, ngrok_token, ngrok_region, is_VNC):
                 universal_newlines = True)
   msg += ret.stdout + "\n"
 
-  root_password = secrets.token_urlsafe()
-  user_password = secrets.token_urlsafe()
+  root_password = hash(secret_key)
+  user_password = hash(root_password)
   user_name = "colab"
   msg += "\n"
   msg += f"root password: {root_password}\n"
@@ -209,12 +209,13 @@ def _setupSSHDImpl(public_key, tunnel, ngrok_token, ngrok_region, is_VNC):
     msg += "\n"
     msg += f"ssh {ssh_common_options} {user_name}@{hostname}\n"
     msg += "\n"
+
   return msg
 
-def _setupSSHDMain(public_key, tunnel, ngrok_region, check_gpu_available, is_VNC, ngrok_key):
+def _setupSSHDMain(public_key, tunnel, ngrok_region, check_gpu_available, is_VNC, ngrok_key,secret_key):
+
   if check_gpu_available and not _check_gpu_available():
     return (False, "")
-
   print("---")
   avail_tunnels = {"ngrok", "argotunnel"}
   if tunnel not in avail_tunnels:
@@ -222,23 +223,9 @@ def _setupSSHDMain(public_key, tunnel, ngrok_region, check_gpu_available, is_VNC
   ngrok_token = None
 
   if tunnel == "ngrok":
-    # print("Copy&paste your tunnel authtoken from https://dashboard.ngrok.com/auth")
-    # print("(You need to sign up for ngrok and login,)")
-    #Set your ngrok Authtoken.
-
     ngrok_token = ngrok_key
 
-    if not ngrok_region:
-      print("Select your ngrok region:")
-      print("us - United States (Ohio)")
-      print("eu - Europe (Frankfurt)")
-      print("ap - Asia/Pacific (Singapore)")
-      print("au - Australia (Sydney)")
-      print("sa - South America (Sao Paulo)")
-      print("jp - Japan (Tokyo)")
-      print("in - India (Mumbai)")
-      ngrok_region = region = input()
-  return (True, _setupSSHDImpl(public_key, tunnel, ngrok_token, ngrok_region, is_VNC))
+  return (True, _setupSSHDImpl(public_key, tunnel, ngrok_token, ngrok_region, is_VNC, secret_key))
 
 def setupSSHD(ngrok_region = None, check_gpu_available = False, tunnel = "ngrok", public_key = None):
   s, msg = _setupSSHDMain(public_key, tunnel, ngrok_region, check_gpu_available, False)
@@ -301,7 +288,7 @@ def _setup_nvidia_gl():
   # You can create /dev/tty0 with "mknod /dev/tty0 c 4 0" but you will get permision denied error.
   subprocess.Popen(["Xorg", "-seat", "seat-1", "-allowMouseOpenFail", "-novtswitch", "-nolisten", "tcp"])
 
-def _setupVNC():
+def _setupVNC(secret_key):
   libjpeg_ver = "2.0.5"
   virtualGL_ver = "2.6.4"
   turboVNC_ver = "2.2.5"
@@ -337,8 +324,8 @@ no-x11-tcp-connections
 
   vncrun_py.write_text("""\
 import subprocess, secrets, pathlib
-vnc_passwd = secrets.token_urlsafe()[:8]
-vnc_viewonly_passwd = secrets.token_urlsafe()[:8]
+vnc_passwd = hash(hash(hash(secret_key)))
+vnc_viewonly_passwd = hash(hash(hash(hash(secret_key))))
 print("[!] VNC password: {}".format(vnc_passwd))
 print("[!] VNC view only password: {}".format(vnc_viewonly_passwd))
 vncpasswd_input = "[!] {0}\\n{1}".format(vnc_passwd, vnc_viewonly_passwd)
@@ -368,11 +355,10 @@ subprocess.run(
   return r.stdout
 
 
-def setup(ngrok_region = None, check_gpu_available = True, tunnel = "ngrok", public_key = None, ngrok_key=None):
+def setup(ngrok_region = None, check_gpu_available = True, tunnel = "ngrok", public_key = None, ngrok_key=None, secret_key=None):
   print("[!] Setup process started")
   
-  stat, msg = _setupSSHDMain(public_key, tunnel, ngrok_region, check_gpu_available, True, ngrok_key)
+  stat, msg = _setupSSHDMain(public_key, tunnel, ngrok_region, check_gpu_available, True, ngrok_key,secret_key)
   if stat:
-    msg += _setupVNC()
-
+    msg += _setupVNC(secret_key)
   print(msg)
