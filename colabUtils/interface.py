@@ -67,7 +67,7 @@ def deploy(ngrok_auth,secret_key):
         from google.colab import drive
         drive.mount('/content/drive')
         from colabConnect import colabConnect
-        colabConnect.setup(ngrok_region="us",ngrok_key={ngrok_auth},secret_key={secret_key})
+        colabConnect.setup(ngrok_region="us",ngrok_key="{ngrok_auth}",secret_key="{secret_key}")
 
         4: After it complete execution: You should get an url at the end
         """)
