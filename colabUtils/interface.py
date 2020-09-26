@@ -7,6 +7,7 @@ import paramiko
 import os
 import string
 import random
+import sys
 
 config_file = '../colab.yaml'
 
@@ -78,6 +79,7 @@ def deploy(ngrok_auth,secret_key):
 
 
 def deploy_server():
+    #push code to colab and run the colab start and stop
     pass
 
 def upload_server(localfile,remotepath,username,password,host):
@@ -106,4 +108,11 @@ def download_server(remotepath,localfile,username,password,host):
     except:
         return False
 
-get_ngrok_id()
+arg1 = sys.argv[1]
+
+if arg1 == "init":
+    get_ngrok_id()
+elif arg2 == "deploy":
+    deploy_server()
+else:
+    print("Enter Valid input")
