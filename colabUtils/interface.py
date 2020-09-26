@@ -9,6 +9,11 @@ import string
 import random
 import sys
 import hashlib
+import coloredlogs, logging
+import argparse
+
+logger = logging.getLogger(__name__)
+coloredlogs.install(fmt="%(levelname)s %(message)s",level='DEBUG', logger=logger)
 
 class ColabSFTPClient(paramiko.SFTPClient):
     def put_dir(self, source, target):
@@ -88,20 +93,19 @@ def deploy():
             data = yaml.load(f, Loader=yaml.FullLoader)
         except Exception as e:
             get_ngrok_id()
-            print(f"[!] Error: {e}")
+            logger.error(f"[!] Error: {e}")
             exit()
     ngrok_auth = data['ngrok_auth']
     secret_key = data['secret_key']
-    print(f"""Please follow the following process to connect to colab:
-1: open https://colab.research.google.com/#create=true (if it does not open automatically)
-2: Change the runtime type to gpu or tpu (optional)
-3: copy the below code to the row and run
+    logger.info(f"""Please follow the following process to connect to colab:
+    1: open https://colab.research.google.com/#create=true (if it does not open automatically)
+    2: Change the runtime type to gpu or tpu (optional)
+    3: copy the below code to the row and run
 
-!pip install git+https://github.com/dvlp-jrs/shellhacks2020.git
-import colabConnect
-colabConnect.setup(ngrok_region="us",ngrok_key="{ngrok_auth}",secret_key="{secret_key}")
-
-4: After it complete execution: You should get an url at the end""")
+    !pip install git+https://github.com/dvlp-jrs/shellhacks2020.git
+    import colabConnect
+    colabConnect.setup(ngrok_region="us",ngrok_key="{ngrok_auth}",secret_key="{secret_key}",vncserver={data['vncserver']})
+    4: After it complete execution: You should get an url at the end""")
     #webbrowser.open('https://colab.research.google.com/#create=true', new=2)
     deploy_server(hashlib.sha1(secret_key.encode('utf-8')).hexdigest()[:10], data['entry_file'])
 
@@ -152,14 +156,15 @@ def download_server(remotepath,localfile,username,password,host):
         return False
 
 def main():
-    arg1 = sys.argv[1]
-
-    if arg1 == "init":
+    parser = argparse.ArgumentParser(description='Options')
+    parser.add_argument('type',help='Options \n init : Initial ngrok and secret key \n deploy : Deploy your code to colab')
+    args = parser.parse_args()
+    if args.type == "init":
         get_ngrok_id()
-    elif arg1 == "deploy":
+    elif args.type == "deploy":
         deploy()
     else:
-        print("Enter Valid input")
+        logger.error("Please Enter a valid command: for help use -h")
 
 if __name__=='__main__':
     main()
