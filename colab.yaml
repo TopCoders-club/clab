@@ -1,3 +1,5 @@
+ngrok_auth: sdfgytrewsdfgh7656
+secret_key: sddssdds
 #our tools config
 running_time: 2 # Running time in minutes
 debug: True # Show debugger messages

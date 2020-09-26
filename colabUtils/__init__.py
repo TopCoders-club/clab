@@ -49,5 +49,3 @@ class colabApp:
                 time.sleep(60)
         
         logging.debug(f'Finished execution.')
-
-        
