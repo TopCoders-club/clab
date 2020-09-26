@@ -4,7 +4,7 @@ import time
 #user code here
 class ExampleApp(colabUtils.colabApp):
     def __init__(self):
-        pass
+        super().__init__()
 
     def start(self):
         while True:
@@ -14,5 +14,6 @@ class ExampleApp(colabUtils.colabApp):
     def stop(self):
         pass
 
-app = ExampleApp()
-app.run()
+if __name__=='__main__':
+    app = ExampleApp()
+    app.run()
