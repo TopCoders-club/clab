@@ -1,4 +1,5 @@
 debug: true
-ngrok_auth: 1i2aqgu5vbEXfHagdy5ub8XO2v3_5PaZrPCdWR6naYLqwKoMp
+entry_file: main.py
+ngrok_auth: 7eg32bauiZNkuSoQhBat3_4cAJq4ZH87rYxc9JpCm9a
 running_time: 2
-secret_key: ELH2SMP51N
+secret_key: 682I2AULCF

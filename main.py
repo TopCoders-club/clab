@@ -12,7 +12,7 @@ class ExampleApp(colabUtils.colabApp):
             print("Running yooo")
 
     def stop(self):
-        pass
+        print('I stopped yo')
 
 if __name__=='__main__':
     app = ExampleApp()

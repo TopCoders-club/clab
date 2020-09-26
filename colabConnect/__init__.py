@@ -1,10 +1,10 @@
 import apt, apt.debfile
 import pathlib, stat, shutil, urllib.request, subprocess, getpass, time, tempfile, os
-os.system("pip3 install pyngrok")
 import secrets, json, re
 import IPython.utils.io
 import ipywidgets
 import pyngrok.ngrok, pyngrok.conf
+import hashlib
 
 # https://salsa.debian.org/apt-team/python-apt
 # https://apt-team.pages.debian.net/python-apt/library/index.html
@@ -157,8 +157,8 @@ def _setupSSHDImpl(public_key, tunnel, ngrok_token, ngrok_region, is_VNC, secret
                 universal_newlines = True)
   msg += ret.stdout + "\n"
 
-  root_password = hash(secret_key)
-  user_password = hash(root_password)
+  root_password = hashlib.sha1(secret_key.encode('utf-8')).hexdigest()[:10]
+  user_password = hashlib.sha1(root_password.encode('utf-8')).hexdigest()[:10]
   user_name = "colab"
   msg += "\n"
   msg += f"root password: {root_password}\n"
@@ -180,35 +180,8 @@ def _setupSSHDImpl(public_key, tunnel, ngrok_token, ngrok_region, is_VNC, secret
     hostname = m.group(1)
     port = m.group(2)
     ssh_common_options += f" -p {port}"
-  elif tunnel == "argotunnel":
-    _download("https://bin.equinox.io/c/VdrWdbjqyF/cloudflared-stable-linux-amd64.tgz", "cloudflared.tgz")
-    shutil.unpack_archive("cloudflared.tgz")
-    cfd_proc = subprocess.Popen(
-        ["./cloudflared", "tunnel", "--url", "ssh://localhost:22", "--logfile", "cloudflared.log", "--metrics", "localhost:49589"],
-        stdout = subprocess.PIPE,
-        universal_newlines = True
-        )
-    time.sleep(4)
-    if cfd_proc.poll() != None:
-      raise RuntimeError("Failed to run cloudflared. Return code:" + str(cloudflared.returncode) + "\nSee clouldflared.log for more info.")
-    with urllib.request.urlopen("http://127.0.0.1:49589/metrics") as response:
-      text = str(response.read())
-      sub = "\\ncloudflared_tunnel_user_hostnames_counts{userHostname=\"https://"
-      begin = text.index(sub)
-      end = text.index("\"", begin + len(sub))
-      hostname = text[begin + len(sub) : end]
-      ssh_common_options += " -oProxyCommand=\"./cloudflared access ssh --hostname %h\""
 
-  msg += "---\n"
-  if is_VNC:
-    msg += "Execute following command on your local machine and login before running TurboVNC viewer:\n"
-    msg += "\n"
-    msg += f"ssh {ssh_common_options} -L 5901:localhost:5901 {user_name}@{hostname}\n"
-  else:
-    msg += "Command to connect to the ssh server:\n"
-    msg += "\n"
-    msg += f"ssh {ssh_common_options} {user_name}@{hostname}\n"
-    msg += "\n"
+  msg = f"Enter this url in the local cli: {hostname}:{port}"
 
   return msg
 
@@ -323,9 +296,9 @@ no-x11-tcp-connections
   vncrun_py = tempfile.gettempdir() / pathlib.Path("vncrun.py")
 
   vncrun_py.write_text("""\
-import subprocess, secrets, pathlib
-vnc_passwd = hash(hash(hash(secret_key)))
-vnc_viewonly_passwd = hash(hash(hash(hash(secret_key))))
+import subprocess, secrets, pathlib, hashlib
+vnc_passwd = hashlib.sha1(hashlib.sha1(hashlib.sha1(secret_key.encode('utf-8')).hexdigest().encode('utf-8')).hexdigest().encode('utf-8')).hexdigest()
+vnc_viewonly_passwd = hashlib.sha1(hashlib.sha1(hashlib.sha1(hashlib.sha1(secret_key.encode('utf-8')).hexdigest().encode('utf-8')).hexdigest().encode('utf-8')).hexdigest().encode('utf-8')).hexdigest()
 print("[!] VNC password: {}".format(vnc_passwd))
 print("[!] VNC view only password: {}".format(vnc_viewonly_passwd))
 vncpasswd_input = "[!] {0}\\n{1}".format(vnc_passwd, vnc_viewonly_passwd)
@@ -359,6 +332,6 @@ def setup(ngrok_region = None, check_gpu_available = True, tunnel = "ngrok", pub
   print("[!] Setup process started")
   
   stat, msg = _setupSSHDMain(public_key, tunnel, ngrok_region, check_gpu_available, True, ngrok_key,secret_key)
-  if stat:
-    msg += _setupVNC(secret_key)
+  #if stat:
+    #msg += _setupVNC(secret_key)
   print(msg)
