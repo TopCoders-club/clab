@@ -11,6 +11,7 @@ import sys
 import hashlib
 import coloredlogs, logging
 import argparse
+import select
 
 logger = logging.getLogger(__name__)
 coloredlogs.install(fmt="%(levelname)s %(message)s",level='DEBUG', logger=logger)
@@ -124,10 +125,26 @@ def deploy_server(passwd, entry_file):
     sftp.mkdir('/home/colab/app', ignore_existing=True)
     sftp.put_dir(os.getcwd(), '/home/colab/app')
     sftp.close()
-    stdin, stdout, stderr = ssh.exec_command(f"cd app && python {entry_file}", get_pty=True)
-    for line in iter(stdout.readline, ""):
-        print(line, end="")
-    print('finished.')
+    print("Running...")
+    stdin, stdout, stderr = ssh.exec_command(f"cd app && sudo pip install -r requirements.txt && sudo python {entry_file}")
+    # live output here
+    channel = stdout.channel
+    stdin.close()                 
+    channel.shutdown_write()     
+    while not channel.closed:
+        readq, _, _ = select.select([channel], [], [])
+        for c in readq:
+            if c.recv_ready(): 
+                sys.stdout.write(channel.recv(len(c.in_buffer)).decode('utf-8'))       # write to fdout
+            if c.recv_stderr_ready():   
+                sys.stdout.write(channel.recv(len(c.in_buffer)).decode('utf-8'))       # write stderr to fdout
+        if channel.exit_status_ready() and not channel.recv_stderr_ready() and not channel.recv_ready(): 
+            channel.shutdown_read() 
+            channel.close()
+            break 
+    stdout.close()
+    stderr.close()
+    return channel.recv_exit_status()
 
 def upload_server(localfile,remotepath,username,password,host):
     try:

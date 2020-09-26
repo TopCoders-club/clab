@@ -12,9 +12,9 @@ class _NoteProgress(apt.progress.base.InstallProgress, apt.progress.base.Acquire
   def __init__(self):
     apt.progress.base.InstallProgress.__init__(self)
     self._label = ipywidgets.Label()
-    # display(self._label)
+    display(self._label)
     self._float_progress = ipywidgets.FloatProgress(min = 0.0, max = 1.0, layout = {'border':'1px solid #118800'})
-    # display(self._float_progress)
+    display(self._float_progress)
 
   def close(self):
     self._float_progress.close()
