@@ -8,9 +8,7 @@ import os
 import string
 import random
 
-
 config_file = '../colab.yaml'
-
 
 def id_generator(size=6, chars=string.ascii_uppercase + string.digits):
     return ''.join(random.choice(chars) for _ in range(size))
@@ -47,20 +45,20 @@ def get_ngrok_id():
             data['secret_key'] = id_generator(10)
             with open(config_file, 'w') as f:
                 f.write( yaml.dump(data, default_flow_style=False))
-            deploy(data["ngrok_auth"])
+            deploy(data["ngrok_auth"],data['secret_key'])
         else:
             print("[!] Invalid Input")
     else:
         ans = prompt(ques2)
         if ans['ques2'] == "Continue with previos setup":
-            deploy(data["ngrok_auth"])
+            deploy(data["ngrok_auth"],data['secret_key'])
         else:
             data['ngrok_auth'] = 'None'
             with open(config_file, 'w') as f:
                 f.write( yaml.dump(data, default_flow_style=False))
             get_ngrok_id()
 
-def deploy(ngrok_auth):
+def deploy(ngrok_auth,secret_key):
     print(f"""Please follow the following process to connect to colab:
         1: open https://colab.research.google.com/#create=true (if it does not open automatically)
         2: Change the runtime type to gpu or tpu (optional)
@@ -69,7 +67,7 @@ def deploy(ngrok_auth):
         from google.colab import drive
         drive.mount('/content/drive')
         from colabConnect import colabConnect
-        colabConnect.setup(ngrok_region="us",ngrok_key={ngrok_auth},secret_key={data['secret_key']})
+        colabConnect.setup(ngrok_region="us",ngrok_key={ngrok_auth},secret_key={secret_key})
 
         4: After it complete execution: You should get an url at the end
         """)
