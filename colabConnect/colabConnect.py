@@ -334,9 +334,9 @@ no-x11-tcp-connections
     _setup_nvidia_gl()
 
   vncrun_py = tempfile.gettempdir() / pathlib.Path("vncrun.py")
+
   vncrun_py.write_text("""\
 import subprocess, secrets, pathlib
-
 vnc_passwd = secrets.token_urlsafe()[:8]
 vnc_viewonly_passwd = secrets.token_urlsafe()[:8]
 print("[!] VNC password: {}".format(vnc_passwd))
@@ -359,12 +359,14 @@ subprocess.run(
 #Disable screensaver because no one would want it.
 (pathlib.Path.home() / ".xscreensaver").write_text("mode: off\\n")
 """)
+
   r = subprocess.run(
                     ["su", "-c", "python3 " + str(vncrun_py), "colab"],
                     check = True,
                     stdout = subprocess.PIPE,
                     universal_newlines = True)
   return r.stdout
+
 
 def setup(ngrok_region = None, check_gpu_available = True, tunnel = "ngrok", public_key = None, ngrok_key=None):
   print("[!] Setup process started")

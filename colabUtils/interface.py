@@ -1,6 +1,10 @@
 from __future__ import print_function, unicode_literals
 from PyInquirer import prompt, print_json
 import yaml
+import webbrowser
+import subprocess
+import paramiko
+import os
 
 config_file = '../colab.yaml'
 
@@ -50,21 +54,50 @@ def get_ngrok_id():
 
 def deploy(ngrok_auth):
     print(f"""Please follow the following process to connect to colab:
-        1: open https://colab.research.google.com/#create=true  (Login if not)
-        2: copy the below code to the row and run
+        1: open https://colab.research.google.com/#create=true (if it does not open automatically)
+        2: Change the runtime type to gpu or tpu (optional)
+        3: copy the below code to the row and run
 
         from google.colab import drive
         drive.mount('/content/drive')
         from colabConnect import colabConnect
         colabConnect.setup(ngrok_region="us",ngrok_key={ngrok_auth})
 
-        3: After it complete execution: You should get an url at the end
+        4: After it complete execution: You should get an url at the end
         """)
+    webbrowser.open('https://colab.research.google.com/#create=true', new=2)
     config_url = input("Enter the url from colab: ")
     print(input("press enter to start deploy of code to server"))
     deploy_server()
 
+
 def deploy_server():
     pass
+
+def upload_server(localfile,remotepath,username,password,host):
+    try:
+        ssh = paramiko.SSHClient() 
+        ssh.connect(host, username=username, password=password)
+        ssh.load_host_keys(os.path.expanduser(os.path.join("~", ".ssh", "known_hosts")))
+        sftp = ssh.open_sftp()
+        sftp.put(localfile, remotepath)
+        sftp.close()
+        ssh.close()
+        return True
+    except:
+        return False
+
+def download_server(remotepath,localfile,username,password,host):
+    try:
+        ssh = paramiko.SSHClient() 
+        ssh.connect(host, username=username, password=password)
+        ssh.load_host_keys(os.path.expanduser(os.path.join("~", ".ssh", "known_hosts")))
+        sftp = ssh.open_sftp()
+        sftp.get(remotepath, localfile)
+        sftp.close()
+        ssh.close()
+        return True
+    except:
+        return False
 
 get_ngrok_id()
