@@ -1,4 +1,4 @@
-# clab# Clab - Easy Ml project deployment
+# clab - Easy Ml project deployment
 
 ## Install
 
@@ -8,6 +8,6 @@
 
 ## Usage
 
-**Refer to the below repo**
+Refer to the below repo
 
 GitHub Repo: [clab-example](https://github.com/dvlp-jrs/clab_example)
