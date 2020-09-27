@@ -142,7 +142,7 @@ def deploy_server(passwd, entry_file):
             response=f'{passwd}\n',
         )
         c.run('cd app')
-        c.run('sudo pip3 install -r requirements.txt', watchers=[sudopass])
+        c.run('sudo pip3 install -r requirements.txt', pty=True, watchers=[sudopass])
         c.run(f"sudo python3 {entry_file}", pty=True, watchers=[sudopass])
     """
     stdin, stdout, stderr = ssh.exec_command()
