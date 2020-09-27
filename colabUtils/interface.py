@@ -190,13 +190,13 @@ def deploy_server(passwd, entry_file):
     try:
         spinner = Halo(text='Deploying', spinner='dots')
         spinner.start()
-        passwd = hashlib.sha1(passwd.encode('utf-8')).hexdigest()[:10]
+        #passwd = hashlib.sha1(passwd.encode('utf-8')).hexdigest()[:10]
         ssh = paramiko.SSHClient()
         ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-        ssh.connect(hostname, port=port, username='colab', password=passwd)
+        ssh.connect(hostname, port=port, username='root', password=passwd)
         sftp = ColabSFTPClient.from_transport(ssh.get_transport())
-        sftp.mkdir('/home/colab/app', ignore_existing=True)
-        sftp.put_dir(os.getcwd(), '/home/colab/app')
+        sftp.mkdir('/home/root/app', ignore_existing=True)
+        sftp.put_dir(os.getcwd(), '/home/root/app')
         sftp.close()
         ssh.close()
         spinner.succeed('Deployed')
@@ -220,7 +220,7 @@ def deploy_server(passwd, entry_file):
             spinner = Halo(text='Installing requirments', spinner='dots')
             spinner.start()
             # print("Installing requirements...")
-            c.run('cd app && sudo pip3 install --ignore-installed -r requirements.txt && sudo nvidia-smi --gpu-reset', pty=True, watchers=[sudopass])
+            c.run('cd app && sudo pip3 install --ignore-installed -r requirements.txt', pty=True, watchers=[sudopass])
             spinner.succeed('Installed requirements')
             spinner = Halo(text='Running', spinner='dots')
             spinner.start()

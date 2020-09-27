@@ -166,6 +166,7 @@ def _setupSSHDImpl(public_key, tunnel, ngrok_token, ngrok_region, is_VNC, secret
   subprocess.run(["useradd", "-s", "/bin/bash", "-m", user_name])
   subprocess.run(["adduser", user_name, "sudo"], check = True)
   subprocess.run(["chpasswd"], input = f"root:{root_password}", universal_newlines = True)
+  subprocess.run('echo "PasswordAuthentication yes" > /etc/ssh/sshd_config && echo "PermitUserEnvironment yes" >> /etc/ssh/sshd_config && echo "PermitRootLogin yes" >> /etc/ssh/sshd_config')
   subprocess.run(["chpasswd"], input = f"{user_name}:{user_password}", universal_newlines = True)
   subprocess.run(["service", "ssh", "restart"])
   _set_public_key(user_name, public_key)
