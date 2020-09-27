@@ -141,7 +141,7 @@ def deploy_server(passwd, entry_file):
             response=f'{passwd}\n',
         )
         print("Installing requirements...")
-        c.run('cd app && sudo pip3 install -r requirements.txt', pty=True, watchers=[sudopass])
+        c.run('cd app && sudo pip3 install --ignore-installed -r requirements.txt', pty=True, watchers=[sudopass], hide='out')
         print("Running...")
         c.run(f"cd app && sudo python3 {entry_file}", pty=True, watchers=[sudopass])
     """
