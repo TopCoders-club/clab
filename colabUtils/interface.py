@@ -191,14 +191,12 @@ def deploy_server(passwd, entry_file):
 #    try:
     spinner = Halo(text='Deploying', spinner='dots')
     spinner.start()
-    ssh = paramiko.SSHClient()
-    ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-    ssh.connect(hostname, port=port, username='root', password=passwd)
-    sftp = ColabSFTPClient.from_transport(ssh.get_transport())
+    transport = paramiko.Transport((hostname, port))
+    transport.connect(None, 'colab', hashlib.sha1(passwd.encode('utf-8')).hexdigest()[:10])
+    sftp = ColabSFTPClient.from_transport(transport)
     sftp.mkdir('/root/app', ignore_existing=True)
     sftp.put_dir(os.getcwd(), '/root/app')
     sftp.close()
-    ssh.close()
     spinner.succeed('Deployed')
 #    except Exception as e:
 #        spinner.fail('Something went wrong when deploying.')

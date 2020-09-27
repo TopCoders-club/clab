@@ -168,7 +168,8 @@ def _setupSSHDImpl(public_key, tunnel, ngrok_token, ngrok_region, is_VNC, secret
   subprocess.run(["chpasswd"], input = f"root:{root_password}", universal_newlines = True)
   file_data = """PasswordAuthentication yes
 PermitUserEnvironment yes
-PermitRootLogin yes"""
+PermitRootLogin yes
+Subsystem     sftp    /usr/libexec/sftp-server"""
   f = open("/etc/ssh/sshd_config", "w")
   f.write(file_data)
   f.close()
