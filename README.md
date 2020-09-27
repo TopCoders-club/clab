@@ -1,4 +1,4 @@
-# clab - Easy Ml project deployment
+# clab - Easy ML project deployment
 
 ## Install
 
