@@ -45,6 +45,11 @@ class colabApp:
                 self.stop()
                 break
         
+            if not self.child_process.is_alive():
+                self.logger.debug(f'Terminated. Running exit code')
+                self.stop()
+                break
+        
             if time.time() >= end_time:
                 self.should_run = False
                 self.logger.debug(f'Endtime reached')
