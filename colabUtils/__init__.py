@@ -56,5 +56,5 @@ class colabApp:
         
         new_folder = get_random_string(7)
         logging.debug(f'Finished execution. Backing up to drive in folder {new_folder}.')
-        copy_tree('/home/colab/app', f'/content/drive/My Drive/{new_folder}')
+        copy_tree('/home/colab/app', f'/content/drive/My Drive/clab_backup/{new_folder}')
         logging.debug(f'Backed up. Terminating.')

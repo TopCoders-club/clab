@@ -129,7 +129,7 @@ def deploy():
 1: open https://colab.research.google.com/#create=true (if it does not open automatically)
 2: Change the runtime type to gpu or tpu (optional)
 3: copy the below code to the row and run
-{bcolors.UNDERLINE}
+{bcolors.WARNING}
 !pip install git+https://github.com/TopCoders-club/clab.git
 from google.colab import drive
 drive.mount('/content/drive')
