@@ -11,14 +11,24 @@ import string
 import random
 import sys
 import hashlib
-import coloredlogs, logging
+# import coloredlogs, logging
 import argparse
 import select
 from halo import Halo
 
 
-logger = logging.getLogger(__name__)
-coloredlogs.install(fmt="%(levelname)s %(message)s",level='DEBUG', logger=logger)
+# logger = logging.getLogger(__name__)
+# coloredlogs.install(fmt="%(levelname)s %(message)s",level='DEBUG', logger=logger)
+
+class bcolors:
+    HEADER = '\033[95m'
+    OKBLUE = '\033[94m'
+    OKGREEN = '\033[92m'
+    WARNING = '\033[93m'
+    FAIL = '\033[91m'
+    ENDC = '\033[0m'
+    BOLD = '\033[1m'
+    UNDERLINE = '\033[4m'
 
 class ColabSFTPClient(paramiko.SFTPClient):
     def put_dir(self, source, target):
@@ -62,14 +72,14 @@ def get_ngrok_id():
                 data['vncserver'] = False
                 f.write( yaml.dump(data, default_flow_style=False))
             except Exception as e:
-                logger.error(f"Error: {e}")
+                print(f"{bcolors.FAIL}Error: {e} {bcolors.ENDC}")
                 exit()
 
     with open(config_file) as f:
         try:
             data = yaml.load(f, Loader=yaml.FullLoader)
         except Exception as e:
-            logger.error(f"Error: {e}")
+            print(f"{bcolors.FAIL}Error: {e} {bcolors.ENDC}")
             exit()
     ques1 = [
         {
@@ -97,14 +107,13 @@ def get_ngrok_id():
             data['secret_key'] = id_generator(10)
             with open(config_file, 'w') as f:
                 f.write( yaml.dump(data, default_flow_style=False))
-                logger.info("Setup Complete")
+                print(f"{bcolors.OKBLUE}Setup Complete {bcolors.ENDC}")
         else:
             print("[!] Invalid Input")
     else:
         ans = prompt(ques2)
-        print(ans)
         if ans['ques2'] == "Continue with previous setup":
-            logger.info("Setup Complete")
+            print(f"{bcolors.OKBLUE}Setup Complete {bcolors.ENDC}")
         else:
             data['ngrok_auth'] = 'None'
             with open(config_file, 'w') as f:
@@ -117,21 +126,21 @@ def deploy():
             data = yaml.load(f, Loader=yaml.FullLoader)
         except Exception as e:
             get_ngrok_id()
-            logger.error(f"[!] Error: {e}")
+            print(f"{bcolors.FAIL}Error: {e} {bcolors.ENDC}")
             exit()
     ngrok_auth = data['ngrok_auth']
     secret_key = data['secret_key']
-    logger.info(f"""Please follow the following process to connect to colab:
+    print(f"""{bcolors.OKBLUE}Please follow the following process to connect to colab:{bcolors.ENDC}
 1: open https://colab.research.google.com/#create=true (if it does not open automatically)
 2: Change the runtime type to gpu or tpu (optional)
 3: copy the below code to the row and run
-
+{bcolors.BOLD}
 !pip install git+https://github.com/dvlp-jrs/shellhacks2020.git
 from google.colab import drive
 drive.mount('/content/drive')
 import colabConnect
 colabConnect.setup(ngrok_region="us",ngrok_key="{ngrok_auth}",secret_key="{secret_key}",vncserver={data['vncserver']})
-
+{bcolors.ENDC}
 4: After it complete execution: You should get an url at the end""")
     #webbrowser.open('https://colab.research.google.com/#create=true', new=2)
     deploy_server(hashlib.sha1(secret_key.encode('utf-8')).hexdigest()[:10], data['entry_file'])
@@ -139,7 +148,7 @@ colabConnect.setup(ngrok_region="us",ngrok_key="{ngrok_auth}",secret_key="{secre
 
 def deploy_server(passwd, entry_file):
     # push code to colab and run the colab start and stop
-    url = input("Enter the url generated in colab: ")
+    url = input(f"{bcolors.OKGREEN}Enter the url generated in colab: {bcolors.ENDC}")
     hostname, port = url.split(':')
     port = int(port)
     spinner = Halo(text='Deploying', spinner='dots')
@@ -228,7 +237,7 @@ def main():
     elif args.type == "deploy":
         deploy()
     else:
-        logger.error("Please Enter a valid command: for help use -h")
+        print(f"{bcolors.WARNING}Please Enter a valid command: for help use -h {bcolors.ENDC}")
 
 if __name__=='__main__':
     main()
