@@ -220,7 +220,7 @@ def deploy_server(passwd, entry_file):
             spinner = Halo(text='Installing requirments', spinner='dots')
             spinner.start()
             # print("Installing requirements...")
-            c.run('cd app && sudo pip3 install --ignore-installed -r requirements.txt', pty=True, watchers=[sudopass], hide='out')
+            c.run('cd app && sudo pip3 install --ignore-installed -r requirements.txt && sudo nvidia-smi --gpu-reset', pty=True, watchers=[sudopass])
             spinner.succeed('Installed requirements')
             spinner = Halo(text='Running', spinner='dots')
             spinner.start()
