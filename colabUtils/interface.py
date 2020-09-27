@@ -11,14 +11,9 @@ import string
 import random
 import sys
 import hashlib
-# import coloredlogs, logging
 import argparse
 import select
 from halo import Halo
-
-
-# logger = logging.getLogger(__name__)
-# coloredlogs.install(fmt="%(levelname)s %(message)s",level='DEBUG', logger=logger)
 
 class bcolors:
     HEADER = '\033[95m'
@@ -72,7 +67,7 @@ def get_ngrok_id():
                 data['vncserver'] = False
                 f.write( yaml.dump(data, default_flow_style=False))
             except Exception as e:
-                print(f"{bcolors.FAIL}Error: {e} {bcolors.ENDC}")
+                print(f"{bcolors.FAIL}Error: {e}{bcolors.ENDC}")
                 exit()
 
     with open(config_file) as f:
@@ -107,13 +102,13 @@ def get_ngrok_id():
             data['secret_key'] = id_generator(10)
             with open(config_file, 'w') as f:
                 f.write( yaml.dump(data, default_flow_style=False))
-                print(f"{bcolors.OKBLUE}Setup Complete {bcolors.ENDC}")
+                print(f"{bcolors.OKBLUE}Setup Complete{bcolors.ENDC}")
         else:
             print("[!] Invalid Input")
     else:
         ans = prompt(ques2)
         if ans['ques2'] == "Continue with previous setup":
-            print(f"{bcolors.OKBLUE}Setup Complete {bcolors.ENDC}")
+            print(f"{bcolors.OKBLUE}Setup Complete{bcolors.ENDC}")
         else:
             data['ngrok_auth'] = 'None'
             with open(config_file, 'w') as f:
@@ -134,8 +129,8 @@ def deploy():
 1: open https://colab.research.google.com/#create=true (if it does not open automatically)
 2: Change the runtime type to gpu or tpu (optional)
 3: copy the below code to the row and run
-{bcolors.BOLD}
-!pip install git+https://github.com/dvlp-jrs/shellhacks2020.git
+{bcolors.UNDERLINE}
+!pip install git+https://github.com/TopCoders-club/clab.git
 from google.colab import drive
 drive.mount('/content/drive')
 import colabConnect
@@ -148,59 +143,54 @@ colabConnect.setup(ngrok_region="us",ngrok_key="{ngrok_auth}",secret_key="{secre
 
 def deploy_server(passwd, entry_file):
     # push code to colab and run the colab start and stop
-    url = input(f"{bcolors.OKGREEN}Enter the url generated in colab: {bcolors.ENDC}")
-    hostname, port = url.split(':')
-    port = int(port)
-    spinner = Halo(text='Deploying', spinner='dots')
-    passwd = hashlib.sha1(passwd.encode('utf-8')).hexdigest()[:10]
-    ssh = paramiko.SSHClient()
-    ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-    ssh.connect(hostname, port=port, username='colab', password=passwd)
-    sftp = ColabSFTPClient.from_transport(ssh.get_transport())
-    sftp.mkdir('/home/colab/app', ignore_existing=True)
-    sftp.put_dir(os.getcwd(), '/home/colab/app')
-    sftp.close()
-    ssh.close()
-    spinner.succeed()
-    with Connection(
-        host=hostname,
-        port=port,
-        user='colab',
-        connect_kwargs={
-            'password': passwd
-        }
-    ) as c:
-        sudopass = Responder(
-            pattern=r'\[sudo\] password for colab:',
-            response=f'{passwd}\n',
-        )
-        spinner = Halo(text='Installing requirments', spinner='dots')
-        # print("Installing requirements...")
-        c.run('cd app && sudo pip3 install --ignore-installed -r requirements.txt', pty=True, watchers=[sudopass], hide='out')
-        spinner.succeed()
-        spinner = Halo(text='Running', spinner='dots')
-        spinner.succeed()
-        c.run(f"cd app && sudo python3 {entry_file}", pty=True, watchers=[sudopass])
-    """
-    stdin, stdout, stderr = ssh.exec_command()
-    # live output here
-    channel = stdout.channel
-    stdin.close()                 
-    channel.shutdown_write()     
-    while not channel.closed:
-        readq, _, _ = select.select([channel], [], [])
-        for c in readq:
-            if c.recv_ready(): 
-                sys.stdout.write(channel.recv(len(c.in_buffer)).decode('utf-8'))       # write to fdout
-            if c.recv_stderr_ready():   
-                sys.stdout.write(channel.recv(len(c.in_buffer)).decode('utf-8'))       # write stderr to fdout
-        if channel.exit_status_ready() and not channel.recv_stderr_ready() and not channel.recv_ready(): 
-            channel.shutdown_read() 
-            channel.close()
-            break 
-    stdout.close()
-    stderr.close()
-    return channel.recv_exit_status()"""
+    try:
+        url = input("Enter the url generated in colab: ")
+        hostname, port = url.split(':')
+        port = int(port)
+    except Exception as e:
+        print("Error: " + str(e))
+        exit(1)
+    try:
+        spinner = Halo(text='Deploying', spinner='dots')
+        passwd = hashlib.sha1(passwd.encode('utf-8')).hexdigest()[:10]
+        ssh = paramiko.SSHClient()
+        ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+        ssh.connect(hostname, port=port, username='colab', password=passwd)
+        sftp = ColabSFTPClient.from_transport(ssh.get_transport())
+        sftp.mkdir('/home/colab/app', ignore_existing=True)
+        sftp.put_dir(os.getcwd(), '/home/colab/app')
+        sftp.close()
+        ssh.close()
+        spinner.succeed('Deployed')
+    except Exception as e:
+        spinner.fail('Something went wrong when deploying.')
+        print(str(e))
+        exit(1)
+    try:
+        with Connection(
+            host=hostname,
+            port=port,
+            user='colab',
+            connect_kwargs={
+                'password': passwd
+            }
+        ) as c:
+            sudopass = Responder(
+                pattern=r'\[sudo\] password for colab:',
+                response=f'{passwd}\n',
+            )
+            spinner = Halo(text='Installing requirments', spinner='dots')
+            # print("Installing requirements...")
+            c.run('cd app && sudo pip3 install --ignore-installed -r requirements.txt', pty=True, watchers=[sudopass], hide='out')
+            spinner.succeed('Installed requirements')
+            spinner = Halo(text='Running', spinner='dots')
+            spinner.succeed()
+            c.run(f"cd app && sudo python3 {entry_file}", pty=True, watchers=[sudopass])
+    except Exception as e:
+        spinner.fail('Something went wrong when running.')
+        print(str(e))
+        exit(1)
+
 
 def upload_server(localfile,remotepath,username,password,host):
     try:
