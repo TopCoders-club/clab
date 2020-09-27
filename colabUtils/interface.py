@@ -173,7 +173,6 @@ colabConnect.setup(ngrok_region="us",ngrok_key="{ngrok_auth}",secret_key="{secre
 
 def deploy_server(passwd, entry_file):
     # push code to colab and run the colab start and stop
-    print(passwd)
     try:
         url = input("Enter the url generated in colab: ")
         hostname, port = url.split(":")
