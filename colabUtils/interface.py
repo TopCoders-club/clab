@@ -251,10 +251,10 @@ def download_server(remotepath, localfile, username, password, host):
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Options")
+    parser = argparse.ArgumentParser(description="Commands")
     parser.add_argument(
         "type",
-        help="Options \n init : Initial ngrok and secret key \n deploy : Deploy your code to colab",
+        help="init: Initiate ngrok and secret key\n deploy: Deploy your code to colab instance",
     )
     args = parser.parse_args()
     if args.type == "init":
@@ -263,7 +263,7 @@ def main():
         deploy()
     else:
         print(
-            f"{bcolors.WARNING}Please Enter a valid command: for help use -h {bcolors.ENDC}"
+            f"{bcolors.WARNING}Please Enter a valid command. For help, use -h{bcolors.ENDC}"
         )
 
 

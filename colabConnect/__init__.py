@@ -151,12 +151,6 @@ def _setupSSHDImpl(public_key, tunnel, ngrok_token, ngrok_region, is_VNC, secret
         i.unlink()
     subprocess.run(["ssh-keygen", "-A"], check=True)
 
-    with open("/etc/ssh/sshd_config", "a") as f:
-        f.write("\n\n# Options added by remocolab\n")
-        f.write("ClientAliveInterval 120\n")
-        if public_key != None:
-            f.write("PasswordAuthentication no\n")
-
     msg = ""
     msg += "ECDSA key fingerprint of host:\n"
     ret = subprocess.run(
@@ -203,7 +197,6 @@ Subsystem sftp /usr/lib/openssh/sftp-server"""
         ssh_common_options += f" -p {port}"
 
     msg = f"Enter this url in the local cli: {hostname}:{port}"
-
     return msg
 
 
@@ -260,8 +253,6 @@ def _setup_nvidia_gl():
         check=True,
         universal_newlines=True,
     )
-
-    # https://virtualgl.org/Documentation/HeadlessNV
     subprocess.run(
         [
             "nvidia-xconfig",
@@ -273,7 +264,6 @@ def _setup_nvidia_gl():
         ],
         check=True,
     )
-
     with open("/etc/X11/xorg.conf", "r") as f:
         conf = f.read()
         conf = re.sub(
@@ -283,23 +273,12 @@ def _setup_nvidia_gl():
             1,
             re.DOTALL,
         )
-
     with open("/etc/X11/xorg.conf", "w") as f:
         f.write(conf)
 
-    #!service lightdm stop
     subprocess.run(
         ["/opt/VirtualGL/bin/vglserver_config", "-config", "+s", "+f"], check=True
     )
-    # user_name = "colab"
-    #!usermod -a -G vglusers $user_name
-    #!service lightdm start
-
-    # Run Xorg server
-    # VirtualGL and OpenGL application require Xorg running with nvidia driver to get Hardware 3D Acceleration.
-    #
-    # Without "-seat seat-1" option, Xorg try to open /dev/tty0 but it doesn't exists.
-    # You can create /dev/tty0 with "mknod /dev/tty0 c 4 0" but you will get permision denied error.
     subprocess.Popen(
         [
             "Xorg",
