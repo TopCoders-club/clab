@@ -84,7 +84,7 @@ def get_ngrok_id():
             'name' : 'ques2',
             'message' : 'Select a option to continue',
             'choices': [
-            'Continue with previos setup',
+            'Continue with previous setup',
             'Reset ngrok id'
             ]
         }
@@ -97,12 +97,14 @@ def get_ngrok_id():
             data['secret_key'] = id_generator(10)
             with open(config_file, 'w') as f:
                 f.write( yaml.dump(data, default_flow_style=False))
+                logger.info("Setup Complete")
         else:
             print("[!] Invalid Input")
     else:
         ans = prompt(ques2)
+        print(ans)
         if ans['ques2'] == "Continue with previous setup":
-            return
+            logger.info("Setup Complete")
         else:
             data['ngrok_auth'] = 'None'
             with open(config_file, 'w') as f:
