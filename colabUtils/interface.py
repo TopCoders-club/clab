@@ -65,6 +65,7 @@ def get_ngrok_id():
                 data['running_time'] = 2
                 data['secret_key'] = 'None'
                 data['vncserver'] = False
+                data['backup'] = False
                 f.write( yaml.dump(data, default_flow_style=False))
             except Exception as e:
                 print(f"{bcolors.FAIL}Error: {e}{bcolors.ENDC}")
@@ -94,12 +95,46 @@ def get_ngrok_id():
             ]
         }
     ]
+    ques3 = [
+        {
+            'type': "list",
+            'name' : 'ques3',
+            'message' : 'Due you want vnc setup',
+            'choices': [
+            'yes',
+            'no'
+            ]
+        }
+    ]
+
+    ques4 = [
+        {
+            'type': "list",
+            'name' : 'ques4',
+            'message' : 'Due you want auto Drive backup',
+            'choices': [
+            'yes',
+            'no'
+            ]
+        }
+    ]
+
     spinner.succeed()
     if data['ngrok_auth'] == 'None':
         ans = prompt(ques1)
         if len(ans['ques1']) >= 10:
             data['ngrok_auth'] = ans['ques1']
             data['secret_key'] = id_generator(10)
+            ans = prompt(ques3)
+            if ans['ques3'] == "yes":
+                data['vncserver'] = True
+            else:
+                data['vncserver'] = False
+            ans = prompt(ques4)
+            if ans['ques4'] == "yes":
+                data['backup'] = True
+            else:
+                data['backup'] = False
             with open(config_file, 'w') as f:
                 f.write( yaml.dump(data, default_flow_style=False))
                 print(f"{bcolors.OKBLUE}Setup Complete{bcolors.ENDC}")
@@ -115,6 +150,7 @@ def get_ngrok_id():
                 f.write( yaml.dump(data, default_flow_style=False))
             get_ngrok_id()
 
+    
 def deploy():
     with open(config_file) as f:
         try:
