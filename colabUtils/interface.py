@@ -141,9 +141,8 @@ def deploy_server(passwd, entry_file):
             pattern=r'\[sudo\] password for colab:',
             response=f'{passwd}\n',
         )
-        c.run('cd app')
-        c.run('sudo pip3 install -r requirements.txt', pty=True, watchers=[sudopass])
-        c.run(f"sudo python3 {entry_file}", pty=True, watchers=[sudopass])
+        c.run('cd app && sudo pip3 install -r requirements.txt', pty=True, watchers=[sudopass])
+        c.run(f"cd app && sudo python3 {entry_file}", pty=True, watchers=[sudopass])
     """
     stdin, stdout, stderr = ssh.exec_command()
     # live output here
