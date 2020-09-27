@@ -2,6 +2,12 @@ import multiprocessing
 import time
 import yaml
 import logging
+from distutils.dir_util import copy_tree
+import random
+import string
+
+def get_random_string(length):
+    return ''.join(random.choice(string.ascii_lowercase) for i in range(length))
 
 # colab project template
 class colabApp:
@@ -48,4 +54,7 @@ class colabApp:
                 self.logger.debug(f'Sleep for 60s')
                 time.sleep(60)
         
-        logging.debug(f'Finished execution.')
+        new_folder = get_random_string(7)
+        logging.debug(f'Finished execution. Backing up to drive in folder {new_folder}.')
+        copy_tree('/home/colab/app', f'/content/drive/My Drive/{new_folder}')
+        logging.debug(f'Backed up. Terminating.')
