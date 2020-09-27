@@ -6,7 +6,7 @@ setup(
     packages=find_packages(),
     url = "https://github.com/dvlp-jrs/shellhacks2020",
     author = "code200",
-    install_requires = ["paramiko", "PyInquirer", "pyyaml", "pyngrok", "coloredlogs"],
+    install_requires = ["fabric", "PyInquirer", "pyyaml", "pyngrok", "coloredlogs"],
     entry_points = {
         'console_scripts': ['cola=colabUtils.interface:main'],
     }
