@@ -16,30 +16,25 @@ import select
 from halo import Halo
 
 class bcolors:
-    HEADER = '\033[95m'
-    OKBLUE = '\033[94m'
-    OKGREEN = '\033[92m'
-    WARNING = '\033[93m'
-    FAIL = '\033[91m'
-    ENDC = '\033[0m'
-    BOLD = '\033[1m'
-    UNDERLINE = '\033[4m'
+    HEADER = "\033[95m"
+    OKBLUE = "\033[94m"
+    OKGREEN = "\033[92m"
+    WARNING = "\033[93m"
+    FAIL = "\033[91m"
+    ENDC = "\033[0m"
+    BOLD = "\033[1m"
+    UNDERLINE = "\033[4m"
 
 class ColabSFTPClient(paramiko.SFTPClient):
     def put_dir(self, source, target):
-        ''' Uploads the contents of the source directory to the target path. The
-            target directory needs to exists. All subdirectories in source are 
-            created under target.
-        '''
         for item in os.listdir(source):
             if os.path.isfile(os.path.join(source, item)):
-                self.put(os.path.join(source, item), '%s/%s' % (target, item))
+                self.put(os.path.join(source, item), "%s/%s" % (target, item))
             else:
-                self.mkdir('%s/%s' % (target, item), ignore_existing=True)
-                self.put_dir(os.path.join(source, item), '%s/%s' % (target, item))
+                self.mkdir("%s/%s" % (target, item), ignore_existing=True)
+                self.put_dir(os.path.join(source, item), "%s/%s" % (target, item))
 
     def mkdir(self, path, mode=511, ignore_existing=False):
-        ''' Augments mkdir by adding an option to not fail if the folder exists  '''
         try:
             super(ColabSFTPClient, self).mkdir(path, mode)
         except IOError:
@@ -48,26 +43,28 @@ class ColabSFTPClient(paramiko.SFTPClient):
             else:
                 raise
 
-config_file = 'colab.yaml'
+
+config_file = "colab.yaml"
+
 
 def id_generator(size=6, chars=string.ascii_uppercase + string.digits):
-    return ''.join(random.choice(chars) for _ in range(size))
+    return "".join(random.choice(chars) for _ in range(size))
 
 def get_ngrok_id():
-    spinner = Halo(text='Loading', spinner='dots')
+    spinner = Halo(text="Loading", spinner="dots")
     spinner.start()
     if not os.path.isfile(config_file):
-        with open(config_file,'w+') as f:
+        with open(config_file, "w+") as f:
             try:
                 data = {}
-                data['debug'] = True,
-                data['entry_file'] = 'main.py'
-                data['ngrok_auth'] = 'None'
-                data['running_time'] = 2
-                data['secret_key'] = 'None'
-                data['vncserver'] = False
-                data['backup'] = False
-                f.write( yaml.dump(data, default_flow_style=False))
+                data["debug"] = (True,)
+                data["entry_file"] = "main.py"
+                data["ngrok_auth"] = "None"
+                data["running_time"] = 2
+                data["secret_key"] = "None"
+                data["vncserver"] = False
+                data["backup"] = False
+                f.write(yaml.dump(data, default_flow_style=False))
             except Exception as e:
                 print(f"{bcolors.FAIL}Error: {e}{bcolors.ENDC}")
                 exit()
@@ -80,78 +77,69 @@ def get_ngrok_id():
             exit()
     ques1 = [
         {
-            'type' : 'input',
-            'name' : 'ques1',
-            'message' : '[+] Initial Setup: \n Please create ngrok account at https://ngrok.com and paste it here: '
+            "type": "input",
+            "name": "ques1",
+            "message": "Initial Setup: \n Please create ngrok account at https://ngrok.com and paste it here: ",
         }
     ]
     ques2 = [
         {
-            'type': "list",
-            'name' : 'ques2',
-            'message' : 'Select a option to continue',
-            'choices': [
-            'Continue with previous setup',
-            'Reset ngrok id'
-            ]
+            "type": "list",
+            "name": "ques2",
+            "message": "Select a option to continue",
+            "choices": ["Continue with previous setup", "Reset ngrok id"],
         }
     ]
     ques3 = [
         {
-            'type': "list",
-            'name' : 'ques3',
-            'message' : 'Due you want vnc setup',
-            'choices': [
-            'yes',
-            'no'
-            ]
+            "type": "list",
+            "name": "ques3",
+            "message": "Do you need VNC server? ",
+            "choices": ["yes", "no"],
         }
     ]
 
     ques4 = [
         {
-            'type': "list",
-            'name' : 'ques4',
-            'message' : 'Due you want auto Drive backup',
-            'choices': [
-            'yes',
-            'no'
-            ]
+            "type": "list",
+            "name": "ques4",
+            "message": "Do you want automatic backups to Google Drive? ",
+            "choices": ["yes", "no"],
         }
     ]
 
     spinner.succeed()
-    if data['ngrok_auth'] == 'None':
+    if data["ngrok_auth"] == "None":
         ans = prompt(ques1)
-        if len(ans['ques1']) >= 10:
-            data['ngrok_auth'] = ans['ques1']
-            data['secret_key'] = id_generator(10)
+        if len(ans["ques1"]) >= 10:
+            data["ngrok_auth"] = ans["ques1"]
+            data["secret_key"] = id_generator(10)
             ans = prompt(ques3)
-            if ans['ques3'] == "yes":
-                data['vncserver'] = True
+            if ans["ques3"] == "yes":
+                data["vncserver"] = True
             else:
-                data['vncserver'] = False
+                data["vncserver"] = False
             ans = prompt(ques4)
-            if ans['ques4'] == "yes":
-                data['backup'] = True
+            if ans["ques4"] == "yes":
+                data["backup"] = True
             else:
-                data['backup'] = False
-            with open(config_file, 'w') as f:
-                f.write( yaml.dump(data, default_flow_style=False))
+                data["backup"] = False
+            with open(config_file, "w") as f:
+                f.write(yaml.dump(data, default_flow_style=False))
                 print(f"{bcolors.OKBLUE}Setup Complete{bcolors.ENDC}")
         else:
             print("[!] Invalid Input")
     else:
         ans = prompt(ques2)
-        if ans['ques2'] == "Continue with previous setup":
+        if ans["ques2"] == "Continue with previous setup":
             print(f"{bcolors.OKBLUE}Setup Complete{bcolors.ENDC}")
         else:
-            data['ngrok_auth'] = 'None'
-            with open(config_file, 'w') as f:
-                f.write( yaml.dump(data, default_flow_style=False))
+            data["ngrok_auth"] = "None"
+            with open(config_file, "w") as f:
+                f.write(yaml.dump(data, default_flow_style=False))
             get_ngrok_id()
 
-    
+
 def deploy():
     with open(config_file) as f:
         try:
@@ -160,22 +148,27 @@ def deploy():
             get_ngrok_id()
             print(f"{bcolors.FAIL}Error: {e} {bcolors.ENDC}")
             exit()
-    ngrok_auth = data['ngrok_auth']
-    secret_key = data['secret_key']
-    print(f"""{bcolors.OKBLUE}Please follow the following process to connect to colab:{bcolors.ENDC}
+    ngrok_auth = data["ngrok_auth"]
+    secret_key = data["secret_key"]
+    drive = """
+from google.colab import drive
+drive.mount('/content/drive')"""
+    print(
+        f"""{bcolors.OKBLUE}Please follow the following process to connect to colab:{bcolors.ENDC}
 1: open https://colab.research.google.com/#create=true (if it does not open automatically)
 2: Change the runtime type to gpu or tpu (optional)
 3: copy the below code to the row and run
 {bcolors.WARNING}
-!pip install git+https://github.com/TopCoders-club/clab.git
-from google.colab import drive
-drive.mount('/content/drive')
+!pip install git+https://github.com/TopCoders-club/clab.git{drive if data['backup'] else ""}
 import colabConnect
 colabConnect.setup(ngrok_region="us",ngrok_key="{ngrok_auth}",secret_key="{secret_key}",vncserver={data['vncserver']})
 {bcolors.ENDC}
-4: After it complete execution: You should get an url at the end""")
-    #webbrowser.open('https://colab.research.google.com/#create=true', new=2)
-    deploy_server(hashlib.sha1(secret_key.encode('utf-8')).hexdigest()[:10], data['entry_file'])
+4: After it complete execution: You should get an url at the end"""
+    )
+    webbrowser.open("https://colab.research.google.com/#create=true", new=2)
+    deploy_server(
+        hashlib.sha1(secret_key.encode("utf-8")).hexdigest()[:10], data["entry_file"]
+    )
 
 
 def deploy_server(passwd, entry_file):
@@ -183,56 +176,55 @@ def deploy_server(passwd, entry_file):
     print(passwd)
     try:
         url = input("Enter the url generated in colab: ")
-        hostname, port = url.split(':')
+        hostname, port = url.split(":")
         port = int(port)
     except Exception as e:
         print("Error: " + str(e))
         exit(1)
     try:
-        spinner = Halo(text='Deploying', spinner='dots')
+        spinner = Halo(text="Deploying", spinner="dots")
         spinner.start()
         transport = paramiko.Transport((hostname, port))
-        transport.connect(None, 'root', passwd)
+        transport.connect(None, "root", passwd)
         sftp = ColabSFTPClient.from_transport(transport)
-        sftp.mkdir('/root/app', ignore_existing=True)
-        sftp.put_dir(os.getcwd(), '/root/app')
+        sftp.mkdir("/root/app", ignore_existing=True)
+        sftp.put_dir(os.getcwd(), "/root/app")
         sftp.close()
-        spinner.succeed('Deployed')
+        spinner.succeed("Deployed")
     except Exception as e:
-        spinner.fail('Something went wrong when deploying.')
+        spinner.fail("Something went wrong when deploying.")
         print(str(e))
         exit(1)
     try:
         with Connection(
-            host=hostname,
-            port=port,
-            user='root',
-            connect_kwargs={
-                'password': passwd
-            }
+            host=hostname, port=port, user="root", connect_kwargs={"password": passwd}
         ) as c:
             sudopass = Responder(
-                pattern=r'\[sudo\] password for colab:',
-                response=f'{passwd}\n',
+                pattern=r"\[sudo\] password for colab:",
+                response=f"{passwd}\n",
             )
-            spinner = Halo(text='Installing requirments', spinner='dots')
+            spinner = Halo(text="Installing requirments", spinner="dots")
             spinner.start()
-            # print("Installing requirements...")
-            c.run('cd app && sudo pip3 install --ignore-installed -r requirements.txt', pty=True, watchers=[sudopass], hide='out')
-            spinner.succeed('Installed requirements')
-            spinner = Halo(text='Running', spinner='dots')
+            c.run(
+                "cd app && sudo pip3 install --ignore-installed -r requirements.txt",
+                pty=True,
+                watchers=[sudopass],
+                hide="out",
+            )
+            spinner.succeed("Installed requirements")
+            spinner = Halo(text="Running", spinner="dots")
             spinner.start()
             spinner.succeed()
             c.run(f"cd app && sudo python3 {entry_file}", pty=True, watchers=[sudopass])
     except Exception as e:
-        spinner.fail('Something went wrong when running.')
+        spinner.fail("Something went wrong when running.")
         print(str(e))
         exit(1)
 
 
-def upload_server(localfile,remotepath,username,password,host):
+def upload_server(localfile, remotepath, username, password, host):
     try:
-        ssh = paramiko.SSHClient() 
+        ssh = paramiko.SSHClient()
         ssh.connect(host, username=username, password=password)
         ssh.load_host_keys(os.path.expanduser(os.path.join("~", ".ssh", "known_hosts")))
         sftp = ssh.open_sftp()
@@ -243,9 +235,10 @@ def upload_server(localfile,remotepath,username,password,host):
     except:
         return False
 
-def download_server(remotepath,localfile,username,password,host):
+
+def download_server(remotepath, localfile, username, password, host):
     try:
-        ssh = paramiko.SSHClient() 
+        ssh = paramiko.SSHClient()
         ssh.connect(host, username=username, password=password)
         ssh.load_host_keys(os.path.expanduser(os.path.join("~", ".ssh", "known_hosts")))
         sftp = ssh.open_sftp()
@@ -256,16 +249,23 @@ def download_server(remotepath,localfile,username,password,host):
     except:
         return False
 
+
 def main():
-    parser = argparse.ArgumentParser(description='Options')
-    parser.add_argument('type',help='Options \n init : Initial ngrok and secret key \n deploy : Deploy your code to colab')
+    parser = argparse.ArgumentParser(description="Options")
+    parser.add_argument(
+        "type",
+        help="Options \n init : Initial ngrok and secret key \n deploy : Deploy your code to colab",
+    )
     args = parser.parse_args()
     if args.type == "init":
         get_ngrok_id()
     elif args.type == "deploy":
         deploy()
     else:
-        print(f"{bcolors.WARNING}Please Enter a valid command: for help use -h {bcolors.ENDC}")
+        print(
+            f"{bcolors.WARNING}Please Enter a valid command: for help use -h {bcolors.ENDC}"
+        )
 
-if __name__=='__main__':
+
+if __name__ == "__main__":
     main()
