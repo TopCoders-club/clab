@@ -2,4 +2,5 @@ debug: true
 entry_file: main.py
 ngrok_auth: 7eg32bauiZNkuSoQhBat3_4cAJq4ZH87rYxc9JpCm9a
 running_time: 2
-secret_key: 682I2AULCF
+secret_key: R8YJ296785
+vncserver: false

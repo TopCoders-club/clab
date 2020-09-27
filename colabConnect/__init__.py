@@ -327,7 +327,7 @@ subprocess.run(
   return r.stdout
 
 
-def setup(ngrok_region = None, check_gpu_available = True, tunnel = "ngrok", public_key = None, ngrok_key=None, secret_key=None,vncserver=True):
+def setup(ngrok_region = None, check_gpu_available = True, tunnel = "ngrok", public_key = None, ngrok_key=None, secret_key=None,vncserver=False):
   print("[!] Setup process started")
   stat, msg = _setupSSHDMain(public_key, tunnel, ngrok_region, check_gpu_available, True, ngrok_key,secret_key)
   if stat:

@@ -4,6 +4,7 @@ import yaml
 import webbrowser
 import subprocess
 import paramiko
+from fabric.connection import Connection
 import os
 import string
 import random
@@ -99,14 +100,14 @@ def deploy():
     ngrok_auth = data['ngrok_auth']
     secret_key = data['secret_key']
     logger.info(f"""Please follow the following process to connect to colab:
-    1: open https://colab.research.google.com/#create=true (if it does not open automatically)
-    2: Change the runtime type to gpu or tpu (optional)
-    3: copy the below code to the row and run
+1: open https://colab.research.google.com/#create=true (if it does not open automatically)
+2: Change the runtime type to gpu or tpu (optional)
+3: copy the below code to the row and run
 
-    !pip install git+https://github.com/dvlp-jrs/shellhacks2020.git
-    import colabConnect
-    colabConnect.setup(ngrok_region="us",ngrok_key="{ngrok_auth}",secret_key="{secret_key}",vncserver={data['vncserver']})
-    4: After it complete execution: You should get an url at the end""")
+!pip install git+https://github.com/dvlp-jrs/shellhacks2020.git
+import colabConnect
+colabConnect.setup(ngrok_region="us",ngrok_key="{ngrok_auth}",secret_key="{secret_key}",vncserver={data['vncserver']})
+4: After it complete execution: You should get an url at the end""")
     #webbrowser.open('https://colab.research.google.com/#create=true', new=2)
     deploy_server(hashlib.sha1(secret_key.encode('utf-8')).hexdigest()[:10], data['entry_file'])
 
@@ -125,8 +126,19 @@ def deploy_server(passwd, entry_file):
     sftp.mkdir('/home/colab/app', ignore_existing=True)
     sftp.put_dir(os.getcwd(), '/home/colab/app')
     sftp.close()
+    ssh.close()
     print("Running...")
-    stdin, stdout, stderr = ssh.exec_command(f"cd app && sudo pip install -r requirements.txt && sudo python {entry_file}")
+    with Connection(
+        host=hostname,
+        port=port,
+        user='colab',
+        connect_kwargs={
+            'password': passwd
+        }
+    ) as c:
+        c.run(f"cd app && sudo pip install -r requirements.txt && sudo python {entry_file}", pty=True)
+    """
+    stdin, stdout, stderr = ssh.exec_command()
     # live output here
     channel = stdout.channel
     stdin.close()                 
@@ -144,7 +156,7 @@ def deploy_server(passwd, entry_file):
             break 
     stdout.close()
     stderr.close()
-    return channel.recv_exit_status()
+    return channel.recv_exit_status()"""
 
 def upload_server(localfile,remotepath,username,password,host):
     try:
