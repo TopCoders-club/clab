@@ -180,6 +180,7 @@ colabConnect.setup(ngrok_region="us",ngrok_key="{ngrok_auth}",secret_key="{secre
 
 def deploy_server(passwd, entry_file):
     # push code to colab and run the colab start and stop
+    print(passwd)
     try:
         url = input("Enter the url generated in colab: ")
         hostname, port = url.split(':')
@@ -187,23 +188,22 @@ def deploy_server(passwd, entry_file):
     except Exception as e:
         print("Error: " + str(e))
         exit(1)
-    try:
-        spinner = Halo(text='Deploying', spinner='dots')
-        spinner.start()
-        #passwd = hashlib.sha1(passwd.encode('utf-8')).hexdigest()[:10]
-        ssh = paramiko.SSHClient()
-        ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-        ssh.connect(hostname, port=port, username='root', password=passwd)
-        sftp = ColabSFTPClient.from_transport(ssh.get_transport())
-        sftp.mkdir('/home/root/app', ignore_existing=True)
-        sftp.put_dir(os.getcwd(), '/home/root/app')
-        sftp.close()
-        ssh.close()
-        spinner.succeed('Deployed')
-    except Exception as e:
-        spinner.fail('Something went wrong when deploying.')
-        print(str(e))
-        exit(1)
+#    try:
+    spinner = Halo(text='Deploying', spinner='dots')
+    spinner.start()
+    ssh = paramiko.SSHClient()
+    ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+    ssh.connect(hostname, port=port, username='root', password=passwd)
+    sftp = ColabSFTPClient.from_transport(ssh.get_transport())
+    sftp.mkdir('/root/app', ignore_existing=True)
+    sftp.put_dir(os.getcwd(), '/root/app')
+    sftp.close()
+    ssh.close()
+    spinner.succeed('Deployed')
+#    except Exception as e:
+#        spinner.fail('Something went wrong when deploying.')
+#        print(str(e))
+#        exit(1)
     try:
         with Connection(
             host=hostname,
