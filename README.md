@@ -3,7 +3,7 @@
 ## Install
 
 ```
-!pip install git+https://github.com/dvlp-jrs/shellhacks2020.git
+!pip install git+https://github.com/TopCoders-club/clab
 ```
 
 ## Usage
