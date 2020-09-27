@@ -202,32 +202,32 @@ def deploy_server(passwd, entry_file):
         spinner.fail('Something went wrong when deploying.')
         print(str(e))
         exit(1)
-#    try:
-    with Connection(
-        host=hostname,
-        port=port,
-        user='root',
-        connect_kwargs={
-            'password': passwd
-        }
-    ) as c:
-        sudopass = Responder(
-            pattern=r'\[sudo\] password for colab:',
-            response=f'{passwd}\n',
-        )
-        spinner = Halo(text='Installing requirments', spinner='dots')
-        spinner.start()
-        # print("Installing requirements...")
-        c.run('cd app && sudo pip3 install --ignore-installed -r requirements.txt', pty=True, watchers=[sudopass])
-        spinner.succeed('Installed requirements')
-        spinner = Halo(text='Running', spinner='dots')
-        spinner.start()
-        spinner.succeed()
-        c.run(f"cd app && sudo python3 {entry_file}", pty=True, watchers=[sudopass])
-#    except Exception as e:
-#        spinner.fail('Something went wrong when running.')
-#        print(str(e))
-#        exit(1)
+    try:
+        with Connection(
+            host=hostname,
+            port=port,
+            user='root',
+            connect_kwargs={
+                'password': passwd
+            }
+        ) as c:
+            sudopass = Responder(
+                pattern=r'\[sudo\] password for colab:',
+                response=f'{passwd}\n',
+            )
+            spinner = Halo(text='Installing requirments', spinner='dots')
+            spinner.start()
+            # print("Installing requirements...")
+            c.run('cd app && sudo pip3 install --ignore-installed -r requirements.txt', pty=True, watchers=[sudopass], hide='out')
+            spinner.succeed('Installed requirements')
+            spinner = Halo(text='Running', spinner='dots')
+            spinner.start()
+            spinner.succeed()
+            c.run(f"cd app && sudo python3 {entry_file}", pty=True, watchers=[sudopass])
+    except Exception as e:
+        spinner.fail('Something went wrong when running.')
+        print(str(e))
+        exit(1)
 
 
 def upload_server(localfile,remotepath,username,password,host):
