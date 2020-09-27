@@ -6,9 +6,12 @@ import ipywidgets
 import pyngrok.ngrok, pyngrok.conf
 import hashlib
 from halo import Halo
+import coloredlogs, logging
 
-# https://salsa.debian.org/apt-team/python-apt
-# https://apt-team.pages.debian.net/python-apt/library/index.html
+
+logger = logging.getLogger(__name__)
+coloredlogs.install(fmt="%(levelname)s %(message)s",level='DEBUG', logger=logger)
+
 class _NoteProgress(apt.progress.base.InstallProgress, apt.progress.base.AcquireProgress, apt.progress.base.OpProgress):
   def __init__(self):
     apt.progress.base.InstallProgress.__init__(self)
@@ -334,4 +337,4 @@ def setup(ngrok_region = None, check_gpu_available = True, tunnel = "ngrok", pub
   if stat:
     if vncserver:
       msg += _setupVNC(secret_key)
-  print(msg)
+  logger.info(msg)
