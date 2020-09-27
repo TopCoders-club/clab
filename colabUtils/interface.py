@@ -4,7 +4,8 @@ import yaml
 import webbrowser
 import subprocess
 import paramiko
-from fabric.connection import Connection
+from fabric import Connection
+from invoke import Responder
 import os
 import string
 import random
@@ -136,7 +137,11 @@ def deploy_server(passwd, entry_file):
             'password': passwd
         }
     ) as c:
-        c.run(f"cd app && sudo pip install -r requirements.txt && sudo python {entry_file}", pty=True)
+        sudopass = Responder(
+            pattern=r'\[sudo\] password for colab:',
+            response=f'{passwd}\n',
+        )
+        c.run(f"cd app && sudo pip3 install -r requirements.txt && sudo python3 {entry_file}", pty=True, watchers=[sudopass])
     """
     stdin, stdout, stderr = ssh.exec_command()
     # live output here

@@ -10,7 +10,7 @@ class colabApp:
         self.should_run = True
         self.logger = logging.getLogger('colabApp')
 
-        self.config = yaml.full_load(open(config_file, 'r'))
+        self.config = yaml.load(open(config_file, 'r'), Loader=yaml.FullLoader)
         if self.config['debug']:
             logging.basicConfig(level=logging.DEBUG)
         else:
