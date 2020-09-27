@@ -6,7 +6,7 @@ import subprocess
 import paramiko
 from fabric import Connection
 from invoke import Responder
-import os
+import os, os.path
 import string
 import random
 import sys
@@ -14,6 +14,8 @@ import hashlib
 import coloredlogs, logging
 import argparse
 import select
+from halo import Halo
+
 
 logger = logging.getLogger(__name__)
 coloredlogs.install(fmt="%(levelname)s %(message)s",level='DEBUG', logger=logger)
@@ -47,11 +49,27 @@ def id_generator(size=6, chars=string.ascii_uppercase + string.digits):
     return ''.join(random.choice(chars) for _ in range(size))
 
 def get_ngrok_id():
+    spinner = Halo(text='Loading', spinner='dots')
+    if not os.path.isfile(config_file):
+        with open(config_file,'w+') as f:
+            try:
+                data = {}
+                data['debug'] = True,
+                data['entry_file'] = 'main.py'
+                data['ngrok_auth'] = 'None'
+                data['running_time'] = 2
+                data['secret_key'] = 'None'
+                data['vncserver'] = False
+                f.write( yaml.dump(data, default_flow_style=False))
+            except Exception as e:
+                logger.error(f"Error: {e}")
+                exit()
+
     with open(config_file) as f:
         try:
             data = yaml.load(f, Loader=yaml.FullLoader)
         except Exception as e:
-            print(f"[!] Error: {e}")
+            logger.error(f"Error: {e}")
             exit()
     ques1 = [
         {
@@ -71,6 +89,7 @@ def get_ngrok_id():
             ]
         }
     ]
+    spinner.succeed()
     if data['ngrok_auth'] == 'None':
         ans = prompt(ques1)
         if len(ans['ques1']) >= 10:
@@ -106,8 +125,11 @@ def deploy():
 3: copy the below code to the row and run
 
 !pip install git+https://github.com/dvlp-jrs/shellhacks2020.git
+from google.colab import drive
+drive.mount('/content/drive')
 import colabConnect
 colabConnect.setup(ngrok_region="us",ngrok_key="{ngrok_auth}",secret_key="{secret_key}",vncserver={data['vncserver']})
+
 4: After it complete execution: You should get an url at the end""")
     #webbrowser.open('https://colab.research.google.com/#create=true', new=2)
     deploy_server(hashlib.sha1(secret_key.encode('utf-8')).hexdigest()[:10], data['entry_file'])
@@ -118,7 +140,7 @@ def deploy_server(passwd, entry_file):
     url = input("Enter the url generated in colab: ")
     hostname, port = url.split(':')
     port = int(port)
-    print("Deploying...")
+    spinner = Halo(text='Deploying', spinner='dots')
     passwd = hashlib.sha1(passwd.encode('utf-8')).hexdigest()[:10]
     ssh = paramiko.SSHClient()
     ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
@@ -128,6 +150,7 @@ def deploy_server(passwd, entry_file):
     sftp.put_dir(os.getcwd(), '/home/colab/app')
     sftp.close()
     ssh.close()
+    spinner.succeed()
     with Connection(
         host=hostname,
         port=port,
@@ -140,9 +163,12 @@ def deploy_server(passwd, entry_file):
             pattern=r'\[sudo\] password for colab:',
             response=f'{passwd}\n',
         )
-        print("Installing requirements...")
+        spinner = Halo(text='Installing requirments', spinner='dots')
+        # print("Installing requirements...")
         c.run('cd app && sudo pip3 install --ignore-installed -r requirements.txt', pty=True, watchers=[sudopass], hide='out')
-        print("Running...")
+        spinner.succeed()
+        spinner = Halo(text='Running', spinner='dots')
+        spinner.succeed()
         c.run(f"cd app && sudo python3 {entry_file}", pty=True, watchers=[sudopass])
     """
     stdin, stdout, stderr = ssh.exec_command()

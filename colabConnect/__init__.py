@@ -5,6 +5,7 @@ import IPython.utils.io
 import ipywidgets
 import pyngrok.ngrok, pyngrok.conf
 import hashlib
+from halo import Halo
 
 # https://salsa.debian.org/apt-team/python-apt
 # https://apt-team.pages.debian.net/python-apt/library/index.html
