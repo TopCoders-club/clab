@@ -1,5 +1,7 @@
 # clab
 
+Easy ML project deployment to Google Colab
+
 ## Install
 
 ```
