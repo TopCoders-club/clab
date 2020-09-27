@@ -55,6 +55,7 @@ def id_generator(size=6, chars=string.ascii_uppercase + string.digits):
 
 def get_ngrok_id():
     spinner = Halo(text='Loading', spinner='dots')
+    spinner.start()
     if not os.path.isfile(config_file):
         with open(config_file,'w+') as f:
             try:
@@ -188,6 +189,7 @@ def deploy_server(passwd, entry_file):
         exit(1)
     try:
         spinner = Halo(text='Deploying', spinner='dots')
+        spinner.start()
         passwd = hashlib.sha1(passwd.encode('utf-8')).hexdigest()[:10]
         ssh = paramiko.SSHClient()
         ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
@@ -216,10 +218,12 @@ def deploy_server(passwd, entry_file):
                 response=f'{passwd}\n',
             )
             spinner = Halo(text='Installing requirments', spinner='dots')
+            spinner.start()
             # print("Installing requirements...")
             c.run('cd app && sudo pip3 install --ignore-installed -r requirements.txt', pty=True, watchers=[sudopass], hide='out')
             spinner.succeed('Installed requirements')
             spinner = Halo(text='Running', spinner='dots')
+            spinner.start()
             spinner.succeed()
             c.run(f"cd app && sudo python3 {entry_file}", pty=True, watchers=[sudopass])
     except Exception as e:
