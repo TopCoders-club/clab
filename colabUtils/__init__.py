@@ -53,8 +53,11 @@ class colabApp:
                 # TODO: Ping server here
                 self.logger.debug(f'Sleep for 60s')
                 time.sleep(60)
-        
-        new_folder = get_random_string(7)
-        logging.debug(f'Finished execution. Backing up to drive in folder {new_folder}.')
-        copy_tree('/home/colab/app', f'/content/drive/My Drive/clab_backup/{new_folder}')
-        logging.debug(f'Backed up. Terminating.')
+
+        if self.config['backup']:
+            new_folder = get_random_string(7)
+            self.logger.debug(f'Finished execution. Backing up to drive in folder {new_folder}.')
+            copy_tree('/home/colab/app', f'/content/drive/My Drive/clab_backup/{new_folder}')
+            self.logger.debug(f'Backed up. Terminating.')
+        else:
+            self.logger.debug(f'Finished execution. Terminating.')
