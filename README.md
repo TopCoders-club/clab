@@ -5,6 +5,3 @@
 ```
 !pip install git+https://github.com/TopCoders-club/clab
 ```
-
-## Usage
-
