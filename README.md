@@ -1,6 +1,6 @@
 # clab
 
-Easy ML project deployment to Google Colab
+Easy project deployment to Google Colab
 
 ## Install
 
