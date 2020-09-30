@@ -1,4 +1,6 @@
-# clab# Clab - Easy Ml project deployment
+# clab
+
+Easy project deployment to Google Colab
 
 ## Install
 
@@ -8,3 +10,6 @@
 
 ## Usage
 
+Refer to the below repo
+
+GitHub Repo: [clab-example](https://github.com/dvlp-jrs/clab_example)
