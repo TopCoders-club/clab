@@ -302,6 +302,8 @@ def main():
         get_ngrok_id()
     elif args.type == "deploy":
         deploy()
+    elif args.type == "processing3":
+        run_processing()
     else:
         print(
             f"{bcolors.WARNING}Please Enter a valid command. For help, use -h{bcolors.ENDC}"

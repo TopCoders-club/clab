@@ -339,7 +339,8 @@ no-x11-tcp-connections
         """\
 import subprocess, secrets, pathlib, hashlib
 
-vnc_passwd = hashlib.sha1(hashlib.sha1(hashlib.sha1(secret_key.encode('utf-8')).hexdigest().encode('utf-8')).hexdigest().encode('utf-8')).hexdigest()
+secret_key = '"""+secret_key+"""'
+vnc_passwd = hashlib.sha1(hashlib.sha1(hashlib.sha1(secret_key.encode('utf-8')).hexdigest()[:10].encode('utf-8')).hexdigest()[:10].encode('utf-8')).hexdigest()[:10]
 vnc_viewonly_passwd = hashlib.sha1(hashlib.sha1(hashlib.sha1(hashlib.sha1(secret_key.encode('utf-8')).hexdigest().encode('utf-8')).hexdigest().encode('utf-8')).hexdigest().encode('utf-8')).hexdigest()
 vncpasswd_input = "{0}\\n{1}".format(vnc_passwd, vnc_viewonly_passwd)
 vnc_user_dir = pathlib.Path.home().joinpath(".vnc")
