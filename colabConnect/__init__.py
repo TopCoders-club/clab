@@ -6,6 +6,7 @@ import ipywidgets
 import pyngrok.ngrok, pyngrok.conf
 import hashlib
 from halo import Halo
+from google.colab import output
 
 
 class _NoteProgress(
@@ -337,11 +338,10 @@ no-x11-tcp-connections
     vncrun_py.write_text(
         """\
 import subprocess, secrets, pathlib, hashlib
+
 vnc_passwd = hashlib.sha1(hashlib.sha1(hashlib.sha1(secret_key.encode('utf-8')).hexdigest().encode('utf-8')).hexdigest().encode('utf-8')).hexdigest()
 vnc_viewonly_passwd = hashlib.sha1(hashlib.sha1(hashlib.sha1(hashlib.sha1(secret_key.encode('utf-8')).hexdigest().encode('utf-8')).hexdigest().encode('utf-8')).hexdigest().encode('utf-8')).hexdigest()
-print("[!] VNC password: {}".format(vnc_passwd))
-print("[!] VNC view only password: {}".format(vnc_viewonly_passwd))
-vncpasswd_input = "[!] {0}\\n{1}".format(vnc_passwd, vnc_viewonly_passwd)
+vncpasswd_input = "{0}\\n{1}".format(vnc_passwd, vnc_viewonly_passwd)
 vnc_user_dir = pathlib.Path.home().joinpath(".vnc")
 vnc_user_dir.mkdir(exist_ok=True)
 vnc_user_passwd = vnc_user_dir.joinpath("passwd")
@@ -366,7 +366,7 @@ subprocess.run(
         stdout=subprocess.PIPE,
         universal_newlines=True,
     )
-    return r.stdout
+    return
 
 
 def setup(
@@ -390,5 +390,6 @@ def setup(
     )
     if stat:
         if vncserver:
-            msg += _setupVNC(secret_key)
+            _setupVNC(secret_key)
+    output.clear()
     print(msg)

@@ -220,6 +220,48 @@ def deploy_server(passwd, entry_file):
         print(str(e))
         exit(1)
 
+def run_processing():
+    # push code to colab and run the colab start and stop
+    try:
+        url = input("Enter the url generated in colab: ")
+        hostname, port = url.split(":")
+        port = int(port)
+        key = input("Enter secret key: ")
+        passwd = hashlib.sha1(hashlib.sha1(key.encode("utf-8")).hexdigest()[:10].encode("utf-8")).hexdigest()[:10]
+        vnc_pass = hashlib.sha1(passwd.encode("utf-8")).hexdigest()[:10]
+    except Exception as e:
+        print("Error: " + str(e))
+        exit(1)
+    try:
+        spinner = Halo(text="Connecting", spinner="dots")
+        spinner.start()
+        with Connection(
+            host=hostname, port=port, user="colab", connect_kwargs={"password": passwd}
+        ).forward_local(5901) as c:
+            spinner.succeed()
+            sudopass = Responder(
+                pattern=r"\[sudo\] password for colab:",
+                response=f"{passwd}\n",
+            )
+            spinner = Halo(text="Setting up Processing3", spinner="dots")
+            spinner.start()
+            c.run(
+                "cd /content && wget https://github.com/processing/processing/releases/download/processing-0270-3.5.4/processing-3.5.4-linux64.tgz && tar xvfz processing-3.5.4-linux64.tgz",
+                pty=True,
+                watchers=[sudopass],
+                hide="out",
+            )
+            spinner.succeed("Finished setting up Processing3")
+            _ = input(f"Open up your VNC client and enter {bcolors.WARNING}localhost:5901{bcolors.ENDC}. Password is {bcolors.WARNING}{vnc_pass}{bcolors.ENDC}. Press ENTER once you're connected.")
+            spinner = Halo(text="Running", spinner="dots")
+            spinner.start()
+            c.run(f"DISPLAY=:1 vglrun /content/processing-3.5.4-linux64/processing", pty=True, hide="out", watchers=[sudopass])
+    except Exception as e:
+        spinner.fail("Something went wrong when running.")
+        print(str(e))
+        exit(1)
+    spinner.succeed('Done running.')
+
 
 def upload_server(localfile, remotepath, username, password, host):
     try:
