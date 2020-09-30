@@ -14,6 +14,7 @@ import hashlib
 import argparse
 import select
 from halo import Halo
+from sshtunnel import SSHTunnelForwarder
 
 class bcolors:
     HEADER = "\033[95m"
@@ -236,9 +237,16 @@ def run_processing():
         spinner = Halo(text="Connecting", spinner="dots")
         spinner.start()
         with Connection(
-            host=hostname, port=port, user="colab", connect_kwargs={"password": passwd}
-        ).forward_local(5901) as c:
-            spinner.succeed()
+            host=hostname, port=port, user="colab", connect_kwargs={"password": passwd}) as c:
+            server = SSHTunnelForwarder(
+                (hostname, port),
+                ssh_username="colab",
+                ssh_password=passwd,
+                remote_bind_address=('127.0.0.1', 5901),
+                local_bind_address=('0.0.0.0', 5901)
+            )
+            server.start()
+            spinner.succeed("Connected")
             sudopass = Responder(
                 pattern=r"\[sudo\] password for colab:",
                 response=f"{passwd}\n",
@@ -246,22 +254,19 @@ def run_processing():
             spinner = Halo(text="Setting up Processing3", spinner="dots")
             spinner.start()
             c.run(
-                "cd /content && wget https://github.com/processing/processing/releases/download/processing-0270-3.5.4/processing-3.5.4-linux64.tgz && tar xvfz processing-3.5.4-linux64.tgz",
+                "cd /content && sudo wget https://github.com/processing/processing/releases/download/processing-0270-3.5.4/processing-3.5.4-linux64.tgz && sudo tar xvfz processing-3.5.4-linux64.tgz",
                 pty=True,
                 watchers=[sudopass],
                 hide="out",
             )
             spinner.succeed("Finished setting up Processing3")
-            _ = input(f"Open up your VNC client and enter {bcolors.WARNING}localhost:5901{bcolors.ENDC}. Password is {bcolors.WARNING}{vnc_pass}{bcolors.ENDC}. Press ENTER once you're connected.")
-            spinner = Halo(text="Running", spinner="dots")
-            spinner.start()
-            c.run(f"DISPLAY=:1 vglrun /content/processing-3.5.4-linux64/processing", pty=True, hide="out", watchers=[sudopass])
+            print(f"Open up your VNC client and enter {bcolors.WARNING}localhost:5901{bcolors.ENDC}. Password is {bcolors.WARNING}{vnc_pass}{bcolors.ENDC}. Once you're connected, open up Terminal and type this: {bcolors.WARNING}/content/processing-3.5.4/processing{bcolors.ENDC}")
     except Exception as e:
         spinner.fail("Something went wrong when running.")
         print(str(e))
         exit(1)
-    spinner.succeed('Done running.')
-
+    _ = input("Press CTRL+C twice to exit.")
+    server.stop()
 
 def upload_server(localfile, remotepath, username, password, host):
     try:
