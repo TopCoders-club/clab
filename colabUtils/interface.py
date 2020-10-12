@@ -308,7 +308,6 @@ def remote_kernel():
         spinner.fail("Something went wrong when running.")
         print(str(e))
         exit(1)
-    _ = input("Press ENTER to exit.")
     server.stop()
 
 def upload_server(localfile, remotepath, username, password, host):
