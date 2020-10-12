@@ -167,13 +167,14 @@ colabConnect.setup(ngrok_region="us",ngrok_key="{ngrok_auth}",secret_key="{secre
 4: After it complete execution: You should get an url at the end"""
     )
     webbrowser.open("https://colab.research.google.com/#create=true", new=2)
-    deploy_server(
+    return (
         hashlib.sha1(secret_key.encode("utf-8")).hexdigest()[:10], data["entry_file"]
     )
 
 
-def deploy_server(passwd, entry_file):
+def deploy_server():
     # push code to colab and run the colab start and stop
+    passwd, entry_file = deploy()
     try:
         url = input("Enter the url generated in colab: ")
         hostname, port = url.split(":")
@@ -268,6 +269,48 @@ def run_processing():
     _ = input("Press CTRL+C twice to exit.")
     server.stop()
 
+def remote_kernel():
+    # push code to colab and run the colab start and stop
+    try:
+        url = input("Enter the url generated in colab: ")
+        hostname, port = url.split(":")
+        port = int(port)
+        key = input("Enter secret key: ")
+        passwd = hashlib.sha1(key.encode("utf-8")).hexdigest()[:10]
+    except Exception as e:
+        print("Error: " + str(e))
+        exit(1)
+    try:
+        spinner = Halo(text="Connecting", spinner="dots")
+        spinner.start()
+        with Connection(
+            host=hostname, port=port, user="root", connect_kwargs={"password": passwd}) as c:
+            server = SSHTunnelForwarder(
+                (hostname, port),
+                ssh_username="root",
+                ssh_password=passwd,
+                remote_bind_address=('127.0.0.1', 8888),
+                local_bind_address=('0.0.0.0', 8888)
+            )
+            server.start()
+            spinner.succeed("Connected")
+            sudopass = Responder(
+                pattern=r"\[sudo\] password for root:",
+                response=f"{passwd}\n",
+            )
+            print(f"Open {bcolors.WARNING}http://localhost:8888/?token={passwd}{bcolors.ENDC} to connect to Jupyter. Press CTRL+C twice to kill.")
+            c.run(
+                f"LC_ALL=en_US.utf8 python3 -m jupyter notebook --NotebookApp.token='{passwd}' --ip=0.0.0.0 --port=8888 --no-browser",
+                pty=True,
+                watchers=[sudopass],
+            )
+    except Exception as e:
+        spinner.fail("Something went wrong when running.")
+        print(str(e))
+        exit(1)
+    _ = input("Press ENTER to exit.")
+    server.stop()
+
 def upload_server(localfile, remotepath, username, password, host):
     try:
         ssh = paramiko.SSHClient()
@@ -306,9 +349,11 @@ def main():
     if args.type == "init":
         get_ngrok_id()
     elif args.type == "deploy":
-        deploy()
+        deploy_server()
     elif args.type == "processing3":
         run_processing()
+    elif args.type == "jupyter":
+        remote_kernel()
     else:
         print(
             f"{bcolors.WARNING}Please Enter a valid command. For help, use -h{bcolors.ENDC}"
