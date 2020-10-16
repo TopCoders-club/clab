@@ -289,7 +289,7 @@ def remote_kernel():
                 (hostname, port),
                 ssh_username="root",
                 ssh_password=passwd,
-                remote_bind_address=('127.0.0.1', 8888),
+                remote_bind_address=('0.0.0.0', 9000),
                 local_bind_address=('0.0.0.0', 8888)
             )
             server.start()
